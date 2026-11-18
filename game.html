@@ -1,0 +1,236 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>하영이 간호사 키우기 4.1</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap');
+:root{--ink:#354d4b;--paper:#f4f0df;--edge:#8a9f91;--mint:#d5e7dd;--wood:#b99a62}
+*{box-sizing:border-box}
+body{margin:0;padding:12px;background:#dce9df;color:var(--ink);font-family:'Gowun Dodum',sans-serif}
+.game{width:min(100%,1050px);margin:auto;background:#f6f1e4;border:5px solid #b69a67;border-radius:17px;overflow:hidden;box-shadow:0 10px 30px #526b5b35}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 15px;background:linear-gradient(#fff9e9,#eae1ce);border-bottom:3px solid #c5b487}
+h1{font-size:clamp(16px,2.4vw,23px);margin:0;color:#526d66}.subtitle{font-size:11px;color:#87958a;margin-top:2px}
+.stats{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.stat{background:#fffdf4;border:1px solid #c9d5c9;border-radius:20px;padding:5px 9px;font-size:12px;white-space:nowrap}
+.gamearea{padding:8px;background:#739a8e}
+.screen{position:relative;border:5px solid #a68c5d;border-radius:10px;overflow:hidden;background:#8eafa2;box-shadow:inset 0 0 0 3px #d6c18f}
+canvas{display:block;width:100%;height:auto;aspect-ratio:900/620;image-rendering:pixelated;touch-action:none}
+.overlay{position:absolute;inset:0;pointer-events:none}
+.toplabels{position:absolute;left:10px;top:9px;display:flex;gap:6px;flex-wrap:wrap}.tag{background:#f6f0dfed;border:1px solid #9eae9e;border-radius:6px;padding:4px 8px;font-size:11px;box-shadow:0 2px 0 #4d6a5d33}
+.quest{position:absolute;right:10px;top:9px;width:190px;background:#f7f1e3ed;border:2px solid #9baa91;border-radius:8px;padding:8px;font-size:11px;box-shadow:0 3px 0 #4b655b33}.quest b{font-size:12px;display:block;margin-bottom:4px}.quest div{margin:3px 0}.done{color:#528566;text-decoration:line-through}
+.bubble{position:absolute;display:none;left:50%;bottom:12px;transform:translateX(-50%);width:min(440px,88%);background:#f7f2e6;border:2px solid #87998e;border-radius:9px;padding:8px 12px;box-shadow:0 3px 0 #405b5055;text-align:left}.bubble:after{content:"";position:absolute;bottom:-8px;left:50%;width:12px;height:12px;background:#f7f2e6;border-right:2px solid #87998e;border-bottom:2px solid #87998e;transform:rotate(45deg)}.bubble strong{font-size:12px;color:#55736a;display:block}.bubble span{font-size:13px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;background:#e8eee3}
+.dpad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,40px);gap:4px}.dpad button,.actions button{font-family:inherit;border:1px solid #9cae9e;background:linear-gradient(#fffdf4,#dce8dc);color:#49665c;border-radius:8px;box-shadow:0 3px 0 #9bad9c;touch-action:none;font-weight:bold}.dpad button{font-size:18px}.dpad .up{grid-column:2}.dpad .left{grid-column:1;grid-row:2}.dpad .down{grid-column:2;grid-row:2}.dpad .right{grid-column:3;grid-row:2}.actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.actions button{padding:10px 12px;font-size:12px}.dpad button:active,.actions button:active{transform:translateY(2px);box-shadow:0 1px 0 #9bad9c}
+.help{background:#e8eee3;text-align:center;padding:0 8px 10px;color:#7b8b80;font-size:11px}
+@media(max-width:620px){body{padding:3px}.game{border-width:3px;border-radius:11px}.gamearea{padding:4px}.screen{border-width:3px}.quest{width:155px;font-size:9px;right:5px;top:5px;padding:6px}.quest b{font-size:10px}.toplabels{left:5px;top:5px;max-width:45%}.tag{font-size:9px;padding:3px 5px}.toolbar{padding:8px;gap:5px}.dpad{grid-template-columns:repeat(3,49px);grid-template-rows:repeat(2,43px)}.actions{max-width:48%;gap:5px}.actions button{padding:9px 7px;font-size:11px}.bubble{bottom:6px;padding:6px 9px}.bubble span{font-size:11px}.help{font-size:9px}}
+</style>
+</head>
+<body>
+<div class="game">
+<header>
+ <div><h1>🌿 하영이 간호사 키우기 <span style="color:#ad8d55">4.1</span></h1><div class="subtitle">오늘도 평화롭지만은 않은 병동 생활</div></div>
+ <div class="stats"><span class="stat" id="xp">⭐ 경험치 0</span><span class="stat" id="salary">🪙 월급 0원</span><span class="stat" id="time">🕒 08:00</span></div>
+</header>
+<div class="gamearea">
+ <div class="screen">
+  <canvas id="world" width="900" height="620"></canvas>
+  <div class="overlay">
+   <div class="toplabels"><span class="tag">🏥 3층 일반병동</span><span class="tag" id="notice">오늘도 무사히!</span></div>
+   <div class="quest"><b>📋 오늘의 업무</b><div id="qTalk">□ 환자와 대화 0/2</div><div id="qCheck">□ 환자 상태 확인 0/2</div><div id="qFamily">□ 보호자 응대 0/1</div><div id="qReward" style="color:#9a8050;margin-top:5px">완료 보상 +50 EXP</div></div>
+   <div class="bubble" id="bubble"><strong id="bubbleName">하영</strong><span id="bubbleText"></span></div>
+  </div>
+ </div>
+</div>
+<div class="toolbar">
+ <div class="dpad">
+  <button class="up" data-key="ArrowUp">▲</button><button class="left" data-key="ArrowLeft">◀</button><button class="down" data-key="ArrowDown">▼</button><button class="right" data-key="ArrowRight">▶</button>
+ </div>
+ <div class="actions"><button id="interact">💬 대화 / 간호</button><button id="music">♫ 음악 켜기</button></div>
+</div>
+<div class="help">방향키 또는 WASD 이동 · 환자/보호자 가까이에서 스페이스바 또는 대화 버튼 · 모바일은 화면 아래 방향키</div>
+</div>
+<script>
+(()=>{
+'use strict';
+const canvas=document.getElementById('world'),ctx=canvas.getContext('2d');
+const W=900,H=620,el=id=>document.getElementById(id);
+const rand=a=>a[Math.floor(Math.random()*a.length)];
+const colors=['#6baeb1','#c58f91','#9eafd0','#d0b36e','#83aa91','#b49ac6','#83a9bf','#c58d65'];
+const patientNumbers=new Set();
+function number(){let n;do{n=String(Math.floor(Math.random()*900)+100)}while(patientNumbers.has(n));patientNumbers.add(n);return n}
+const beds=Array.from({length:8},(_,i)=>({
+ id:number(),x: i<4?105+i*105:105+(i-4)*105,y:i<4?150:465,
+ color:colors[i],hair:['#4a4440','#55483f','#6b5c54','#3f4546'][i%4],
+ skin:['#f0c6a6','#d9a27e','#e8b99a'][i%3],pose:Math.random()<.5?'lying':'sitting',
+ poseTimer:2+Math.random()*7,chat:0
+}));
+const nurse={x:450,y:390,frame:0};
+const families=Array.from({length:4},(_,i)=>({x:150+i*185,y:300+(i%2)*35,tx:0,ty:0,speed:24+Math.random()*16,shirt:['#a9b8a4','#c69b8b','#a2aeca','#d1bb83'][i],hair:['#55443d','#76665a','#403d3a','#67534a'][i],skin:'#e8bd9c',pause:0}));
+let keys=new Set(),xp=0,salary=0,elapsed=0,active=true,quest={talk:0,check:0,family:0,paid:false};
+let audio=null,music=false,musicLoop=null,bubbleTimeout=null,last=performance.now();
+function R(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
+function L(x,y,x2,y2,c,w=2){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.stroke()}
+function T(t,x,y,size=12,c='#425b56',align='center'){ctx.fillStyle=c;ctx.font=`${size}px "Gowun Dodum",sans-serif`;ctx.textAlign=align;ctx.fillText(t,x,y)}
+function box(x,y,w,h,c='#d5e2d8',edge='#617f76'){R(x,y,w,h,edge);R(x+3,y+3,w-6,h-6,c)}
+function floor(){
+ R(0,0,W,H,'#88aaa0');
+ for(let y=0;y<H;y+=78)for(let x=0;x<W;x+=78){R(x+1,y+1,76,76,((x/78+y/78)%2)?'#8eafa3':'#85a69b');L(x,y,x+78,y,'#75978c',1);L(x,y,x,y+78,'#75978c',1)}
+ // back windows and cabinets
+ R(0,0,W,87,'#b6c8b9');R(0,82,W,9,'#68877c');
+ for(let x=28;x<870;x+=120){box(x,8,110,70,'#c3ddd5','#587d77');R(x+5,12,100,18,'#57b8b3');R(x+8,36,94,36,'#d5e3d9');for(let y=43;y<72;y+=12)L(x+9,y,x+100,y,'#819d90',3);L(x+55,31,x+55,75,'#77968d',2)}
+ // wall-mounted utility cabinet
+ box(12,112,48,116,'#c9dcd2','#557c73');for(let i=0;i<4;i++){R(20,124+i*23,32,15,'#9ac9c0');R(25,128+i*23,5,7,'#4b9c94');R(34,128+i*23,13,7,'#e7e7d4')}
+ // subtle columns
+ for(let x of [0,885]){R(x,90,15,530,'#78978b')}
+}
+function drawBed(p){
+ let x=p.x,y=p.y;
+ // bed cast shadow and frame
+ R(x-37,y+29,83,12,'#637f77');R(x-31,y-22,75,57,'#d9ded3');R(x-27,y-18,67,48,'#eef0e5');R(x-23,y-13,59,39,'#70b5b5');R(x-20,y-10,53,33,'#4f969e');
+ // pillow and rails
+ R(x-20,y-14,49,12,'#dce7dc');L(x-34,y-25,x-34,y+27,'#66827a',4);L(x+42,y-25,x+42,y+27,'#66827a',4);L(x-34,y-25,x+42,y-25,'#66827a',4);
+ // wheels
+ R(x-26,y+39,9,6,'#455f59');R(x+31,y+39,9,6,'#455f59');
+ // monitor and IV
+ L(x-49,y-47,x-49,y+20,'#526f68',3);R(x-57,y-51,16,18,'#e3e9dc');R(x-54,y-47,10,6,'#72b0c6');R(x-54,y-37,10,2,'#d0b968');
+ L(x+53,y-49,x+53,y+22,'#526f68',3);R(x+47,y-53,13,21,'#e3e9dc');R(x+50,y-49,7,8,'#9ac8c0');L(x+53,y-32,x+53,y-25,'#536f67',2);
+ // patient body / face
+ if(p.pose==='lying'){
+  R(x-6,y-5,21,15,p.skin);R(x-9,y-10,18,8,p.hair);R(x+8,y-1,30,15,p.color);R(x+8,y-1,30,3,'#ffffff55');R(x+4,y+3,4,4,'#455b56');
+ }else{
+  R(x-9,y-19,24,25,p.color);R(x-10,y-36,24,19,p.skin);R(x-12,y-40,27,10,p.hair);R(x-12,y-31,5,9,p.hair);R(x+8,y-29,3,3,'#3e5550');R(x-6,y+4,8,8,'#e6ddca');R(x+5,y+4,8,8,'#e6ddca');
+ }
+ // blanket
+ if(p.pose==='lying'){R(x-17,y+7,57,13,p.color);R(x-17,y+7,57,3,'#ffffff45')}
+ // patient label
+ box(x-34,y+51,83,22,'#f5f0df','#758d80');T(p.id+' 환자',x+7,y+66,12,'#415b55');
+}
+function drawStation(){
+ // center nurses station counter, terminal, charts
+ R(300,270,300,92,'#5f7d70');R(306,263,288,88,'#b18e60');R(311,267,278,76,'#d6bd8d');
+ R(321,276,94,51,'#6d8d80');R(327,282,82,39,'#b9d1c1');R(337,287,60,5,'#698e83');R(337,298,47,4,'#698e83');
+ R(444,276,64,51,'#637e75');R(450,282,52,36,'#a8c9bf');R(457,287,38,5,'#5a8980');R(457,297,28,4,'#5a8980');
+ R(526,276,52,51,'#c3d6c9');R(532,282,40,36,'#e9e7d8');R(538,288,28,4,'#86a89a');
+ // chairs and file stacks
+ R(350,356,30,18,'#58756b');R(530,356,30,18,'#58756b');R(319,251,38,10,'#f0e8d2');R(322,245,31,7,'#d0b87e');
+ T('NURSE STATION',450,386,13,'#f5f0df');
+}
+function person(x,y,shirt,hair,skin,visitor=true,frame=0){
+ const bob=Math.sin(frame)*1.5;
+ R(x-9,y+13,19,5,'#55756b55');
+ R(x-8,y-16+bob,16,19,shirt);R(x-6,y-29+bob,13,14,skin);R(x-7,y-32+bob,15,7,hair);R(x-8,y-26+bob,3,8,hair);
+ R(x-6,y+2+bob,5,12,'#e7dfcd');R(x+2,y+2+bob,5,12,'#e7dfcd');R(x-8,y+13+bob,7,4,'#455d56');R(x+1,y+13+bob,7,4,'#455d56');
+ if(visitor){R(x+6,y-12+bob,5,9,'#d7b56d')}
+}
+function drawNurse(){
+ let x=nurse.x,y=nurse.y,b=Math.sin(nurse.frame)*1.5;
+ R(x-17,y+18,35,6,'#526e6555');
+ R(x-13,y-17+b,26,34,'#347681');R(x-7,y-15+b,14,28,'#f1ead9');R(x-3,y-11+b,6,15,'#c89c65');
+ R(x-10,y-43+b,21,22,'#edc2a4');R(x-13,y-47+b,26,10,'#574c49');R(x-15,y-39+b,6,23,'#574c49');R(x+9,y-39+b,6,23,'#574c49');
+ R(x-7,y-34+b,3,3,'#40544f');R(x+4,y-34+b,3,3,'#40544f');R(x-2,y-26+b,5,2,'#b77970');
+ R(x-7,y-50+b,16,5,'#f5f1e5');R(x-2,y-50+b,5,4,'#cf7770');
+ R(x-10,y+15+b,8,12,'#eee7d8');R(x+3,y+15+b,8,12,'#eee7d8');R(x-12,y+26+b,11,5,'#455d59');R(x+2,y+26+b,11,5,'#455d59');
+}
+function draw(){
+ floor();
+ // room equipment and beds arranged around a central station
+ beds.forEach(drawBed);
+ // privacy curtains beside each bed
+ for(let x of [76,500,842]){R(x,106,5,470,'#b7d0c3');R(x+4,106,2,470,'#6f9488')}
+ drawStation();
+ families.forEach((f,i)=>person(f.x,f.y,f.shirt,f.hair,f.skin,true,elapsed*2+i));
+ drawNurse();
+ // ambient light patches
+ R(95,87,15,5,'#e4e9d7');R(788,87,15,5,'#e4e9d7');
+}
+function nearest(list){return list.reduce((a,p)=>!a||Math.hypot(p.x-nurse.x,p.y-nurse.y)<Math.hypot(a.x-nurse.x,a.y-nurse.y)?p:a,null)}
+function move(dt){
+ let dx=(keys.has('ArrowRight')||keys.has('d')?1:0)-(keys.has('ArrowLeft')||keys.has('a')?1:0);
+ let dy=(keys.has('ArrowDown')||keys.has('s')?1:0)-(keys.has('ArrowUp')||keys.has('w')?1:0);
+ if(dx||dy){const n=Math.hypot(dx,dy);nurse.x=Math.max(32,Math.min(868,nurse.x+dx/n*185*dt));nurse.y=Math.max(105,Math.min(585,nurse.y+dy/n*185*dt));nurse.frame+=dt*10}
+}
+function updateStats(){el('xp').textContent='⭐ 경험치 '+xp;el('salary').textContent='🪙 월급 '+salary.toLocaleString('ko-KR')+'원'}
+function bubble(name,msg){el('bubbleName').textContent=name;el('bubbleText').textContent=msg;el('bubble').style.display='block';clearTimeout(bubbleTimeout);bubbleTimeout=setTimeout(()=>el('bubble').style.display='none',4100)}
+const nurseThoughts=['언제쯤 부자가 될까...?','퇴근하고 싶다…','오늘은 칼퇴 가능할까?','커피 한 잔만 마시고 싶어.','내 통장에도 봄이 오겠지?','아무도 호출벨 누르지 말아줘…','오늘 저녁은 뭐 먹지?','간호사도 충전 시간이 필요해!','월급날까지 며칠 남았더라?','집에 가서 침대와 한 몸이 되고 싶다.'];
+function questUpdate(){
+ el('qTalk').textContent=(quest.talk>=2?'✓':'□')+' 환자와 대화 '+Math.min(quest.talk,2)+'/2';
+ el('qCheck').textContent=(quest.check>=2?'✓':'□')+' 환자 상태 확인 '+Math.min(quest.check,2)+'/2';
+ el('qFamily').textContent=(quest.family>=1?'✓':'□')+' 보호자 응대 '+Math.min(quest.family,1)+'/1';
+ if(!quest.paid&&quest.talk>=2&&quest.check>=2&&quest.family>=1){quest.paid=true;xp+=50;salary+=3000;updateStats();bubble('업무 완료','오늘 업무를 모두 끝냈어! 보너스 3,000원을 받았어.')}
+}
+function interact(){
+ const p=nearest(beds),f=nearest(families);
+ const pd=Math.hypot(p.x-nurse.x,p.y-nurse.y),fd=Math.hypot(f.x-nurse.x,f.y-nurse.y);
+ if(Math.min(pd,fd)>105){bubble('하영',rand(['조금 더 가까이 가볼까?','중앙 스테이션에서 환자 상태를 확인해야 해.','어디선가 보호자가 찾는 것 같은데…']));return}
+ if(pd<=fd){
+  showChoices(p.id+' 환자',rand(['안녕하세요. 불편한 곳은 없으세요?','오늘 컨디션은 좀 어떠세요?','필요한 게 있으시면 말씀해주세요.']),[
+   ['활력징후 확인',()=>{quest.check++;xp+=15;salary+=500;updateStats();questUpdate();bubble(p.id+' 환자','혈압과 체온 확인해주셔서 고마워요.')}],
+   ['안부 묻기',()=>{quest.talk++;xp+=8;updateStats();questUpdate();bubble(p.id+' 환자',rand(['조금 나아진 것 같아요.','보호자가 곧 온다고 했어요.','간호사님, 오늘도 고생 많으세요.','혹시 물 한 잔 부탁드려도 될까요?']))}],
+   ['닫기',()=>{}]
+  ]);
+ }else{
+  showChoices('보호자',rand(['안녕하세요, 어느 환자분 보호자이신가요?','무엇을 도와드릴까요?']),[
+   ['상태 문의 응대',()=>{quest.family++;xp+=10;salary+=300;updateStats();questUpdate();bubble('보호자',rand(['설명해주셔서 감사합니다.','아, 이제 조금 안심이 되네요.','면회 시간도 알려주셔서 고맙습니다.']))}],
+   ['면회 안내',()=>{quest.family++;xp+=5;updateStats();questUpdate();bubble('하영','면회 시간과 병동 안내를 해드렸어.')}],
+   ['닫기',()=>{}]
+  ]);
+ }
+}
+function showChoices(title,msg,opts){
+ // Reuse the speech panel as a compact choice panel; native prompt-free buttons are injected below canvas.
+ const old=document.getElementById('choicePanel');if(old)old.remove();
+ const panel=document.createElement('div');panel.id='choicePanel';panel.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(360px,88%);background:#f6f0e2;border:3px solid #82988b;border-radius:10px;padding:12px;box-shadow:0 5px 18px #243b3680;z-index:5;pointer-events:auto;text-align:center';
+ const h=document.createElement('b');h.textContent=title;h.style.color='#55736a';panel.appendChild(h);
+ const p=document.createElement('p');p.textContent=msg;p.style.fontSize='13px';panel.appendChild(p);
+ const row=document.createElement('div');row.style.cssText='display:flex;gap:6px;flex-wrap:wrap;justify-content:center';
+ opts.forEach(([label,fn])=>{const b=document.createElement('button');b.textContent=label;b.style.cssText='border:1px solid #9bad9e;border-radius:7px;padding:8px;background:#e4eee3;color:#405d52;font:12px "Gowun Dodum"';b.onclick=()=>{panel.remove();fn()};row.appendChild(b)});
+ panel.appendChild(row);document.querySelector('.screen').appendChild(panel);
+}
+function moveFamilies(dt){
+ families.forEach(f=>{
+  f.pause-=dt;
+  if(f.pause<=0&&(!f.tx||Math.hypot(f.tx-f.x,f.ty-f.y)<10)){
+   f.tx=90+Math.random()*720;f.ty=255+Math.random()*260;f.pause=1+Math.random()*3;
+  }
+  if(f.tx){let dx=f.tx-f.x,dy=f.ty-f.y,d=Math.hypot(dx,dy);if(d>2){f.x+=dx/d*f.speed*dt;f.y+=dy/d*f.speed*dt}}
+ });
+}
+function loop(now){
+ const dt=Math.min(.04,(now-last)/1000);last=now;
+ if(active){
+  move(dt);moveFamilies(dt);elapsed+=dt;
+  beds.forEach(p=>{p.poseTimer-=dt;if(p.poseTimer<=0){p.pose=p.pose==='lying'?'sitting':'lying';p.poseTimer=4+Math.random()*8}});
+  const mins=Math.floor(elapsed/10);el('time').textContent='🕒 '+String(8+Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');
+  if(Math.random()<dt*.025){bubble('하영',rand(nurseThoughts))}
+ }
+ draw();requestAnimationFrame(loop);
+}
+document.addEventListener('keydown',e=>{
+ const k=e.key.length===1?e.key.toLowerCase():e.key;
+ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Enter'].includes(e.key))e.preventDefault();
+ if((e.key===' '||e.key==='Enter')&&!e.repeat){interact();return}
+ keys.add(k);
+});
+document.addEventListener('keyup',e=>{keys.delete(e.key.length===1?e.key.toLowerCase():e.key)});
+window.addEventListener('blur',()=>keys.clear());document.addEventListener('visibilitychange',()=>{if(document.hidden)keys.clear()});
+document.querySelectorAll('[data-key]').forEach(b=>{
+ const k=b.dataset.key;
+ const down=e=>{e.preventDefault();keys.add(k);b.setPointerCapture?.(e.pointerId)};
+ const up=e=>{e.preventDefault();keys.delete(k)};
+ b.addEventListener('pointerdown',down);['pointerup','pointercancel','lostpointercapture','pointerleave'].forEach(ev=>b.addEventListener(ev,up));
+});
+el('interact').onclick=interact;
+function note(freq,dur,at,volume){if(!audio)return;const o=audio.createOscillator(),g=audio.createGain();o.type='sine';o.frequency.value=freq;g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(volume,at+.1);g.gain.exponentialRampToValueAtTime(.0001,at+dur);o.connect(g);g.connect(audio.destination);o.start(at);o.stop(at+dur+.02)}
+function toggleMusic(){
+ audio=audio||new(window.AudioContext||window.webkitAudioContext)();audio.resume();music=!music;el('music').textContent=music?'♫ 음악 끄기':'♫ 음악 켜기';
+ if(music){const seq=[261.6,329.6,392,329.6,293.7,349.2,392,440,392,329.6,293.7,261.6,349.2,392,329.6,293.7];let i=0;musicLoop=setInterval(()=>{if(!music)return;const t=audio.currentTime;note(seq[i%seq.length],1.15,t,.014);note(seq[(i+4)%seq.length]/2,1.5,t,.007);i++},900)}else clearInterval(musicLoop);
+}
+el('music').onclick=toggleMusic;
+questUpdate();updateStats();bubble('하영',rand(['오늘도 무사히 근무해보자!','환자분들 상태부터 확인하자.','퇴근까지… 힘내자!']));
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
